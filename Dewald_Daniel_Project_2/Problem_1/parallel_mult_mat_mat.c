@@ -12,7 +12,7 @@
     Remember to make it parallelized!
 */ // ------------------------------------------------------ //
 
-void parseCSV(FILE *input, int *output);
+void parseCSV(FILE *input, long int *output);
 
 int main(int argc, char *argv[]) {
   // Catch console errors
@@ -47,9 +47,9 @@ int main(int argc, char *argv[]) {
 
   // TODO: malloc the two input matrices and the output matrix
   // Please use long int as the variable type
-  int *mat_1 = (int *)malloc((n_row1 * n_col1) * sizeof(int));
-  int *mat_2 = (int *)malloc((n_row2 * n_col2) * sizeof(int));
-  int *out_mat = (int *)malloc((n_row1 * n_col2) * sizeof(int));
+  long int *mat_1 = (long int *)malloc((n_row1 * n_col1) * sizeof(int));
+  long int *mat_2 = (long int *)malloc((n_row2 * n_col2) * sizeof(int));
+  long int *out_mat = (long int *)malloc((n_row1 * n_col2) * sizeof(int));
 
   // TODO: Parse the input csv files and fill in the input matrices
   parseCSV(inputMatrix1, mat_1);
@@ -62,6 +62,13 @@ int main(int argc, char *argv[]) {
   // TODO: Parallelize the matrix-matrix multiplication
 #pragma omp parallel for num_threads(thread_count)
   for (int i = 0; i < n_row1; i++) {
+    for (int j = 0; j < n_col2; j++) {
+      long int sum = 0;
+      for (int a = 0; a < n_col1; a++) {
+        sum += mat_1[i * n_col1 + a] * mat_2[a * n_col2 + j];
+      }
+      out_mat[i * n_col2 + j] = sum;
+    }
   }
 
   // Record the finish time
@@ -78,9 +85,9 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < n_row1; i++) {
     for (int j = 0; j < n_col2; j++) {
       if (j == n_col2 - 1) {
-        fprintf(outputFile, "%d", out_mat[count]);
+        fprintf(outputFile, "%ld", out_mat[count]);
       } else {
-        fprintf(outputFile, "%d,", out_mat[count]);
+        fprintf(outputFile, "%ld,", out_mat[count]);
       }
       count++;
     }
@@ -100,7 +107,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void parseCSV(FILE *input, int *output) {
+void parseCSV(FILE *input, long int *output) {
   char vector_row_line[4000];
   int vec_index = 0;
   while (fgets(vector_row_line, sizeof(vector_row_line), input)) {
