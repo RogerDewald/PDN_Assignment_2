@@ -5,13 +5,6 @@
 
 #define DEBUG 0
 
-/* ----------- Project 2 - Problem 1 - Matrix Mult -----------
-
-    This file will multiply two matricies.
-    Complete the TODOs in order to complete this program.
-    Remember to make it parallelized!
-*/ // ------------------------------------------------------ //
-
 void parseCSV(FILE *input, long int *output);
 
 int main(int argc, char *argv[]) {
@@ -49,7 +42,6 @@ int main(int argc, char *argv[]) {
   // Please use long int as the variable type
   long int *mat_1 = (long int *)malloc((n_row1 * n_col1) * sizeof(long int));
   long int *mat_2 = (long int *)malloc((n_row2 * n_col2) * sizeof(long int));
-  long int *out_mat = (long int *)malloc((n_row1 * n_col2) * sizeof(long int));
 
   // TODO: Parse the input csv files and fill in the input matrices
   parseCSV(inputMatrix1, mat_1);
@@ -60,14 +52,17 @@ int main(int argc, char *argv[]) {
   double start = omp_get_wtime();
 
   // TODO: Parallelize the matrix-matrix multiplication
-#pragma omp parallel for num_threads(thread_count)
+  long int maximum = 0;
+#pragma omp parallel for num_threads(thread_count) reduction(max : maximum)
   for (int i = 0; i < n_row1; i++) {
     for (int j = 0; j < n_col2; j++) {
       long int sum = 0;
       for (int a = 0; a < n_col1; a++) {
         sum += mat_1[i * n_col1 + a] * mat_2[a * n_col2 + j];
+        if (sum > maximum) {
+          maximum = sum;
+        }
       }
-      out_mat[i * n_col2 + j] = sum;
     }
   }
 
@@ -81,18 +76,7 @@ int main(int argc, char *argv[]) {
   fprintf(outputTime, "%f", time_passed);
 
   // TODO: save the output matrix to the output csv file
-  int count = 0;
-  for (int i = 0; i < n_row1; i++) {
-    for (int j = 0; j < n_col2; j++) {
-      if (j == n_col2 - 1) {
-        fprintf(outputFile, "%ld", out_mat[count]);
-      } else {
-        fprintf(outputFile, "%ld,", out_mat[count]);
-      }
-      count++;
-    }
-    fprintf(outputFile, "\n");
-  }
+  fprintf(outputFile, "%ld", maximum);
 
   // Cleanup
   fclose(inputMatrix1);
@@ -102,7 +86,6 @@ int main(int argc, char *argv[]) {
   // Remember to free your buffers!
   free(mat_1);
   free(mat_2);
-  free(out_mat);
 
   return 0;
 }
